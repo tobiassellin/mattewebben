@@ -164,6 +164,10 @@ class CalculationWorkspace {
     });
   }
 
+  setPenFx(fxName) {
+    this.setPenEffect(fxName);
+  }
+
   setPenEffect(fxName) {
     this.penFx = fxName || 'normal';
     document.querySelectorAll('[data-pen-fx]').forEach(b => {
@@ -1295,3 +1299,8 @@ class CalculationWorkspace {
 }
 
 window.CalculationWorkspace = CalculationWorkspace;
+
+if (typeof global !== 'undefined') {
+  global.CalculationWorkspace = CalculationWorkspace;
+  global.DIGIT_TEMPLATES = DIGIT_TEMPLATES;
+}

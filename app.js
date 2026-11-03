@@ -216,6 +216,10 @@ class MatteApp {
       if (!saved) return defaultState;
       const parsed = { ...defaultState, ...JSON.parse(saved) };
       const today = new Date().toISOString().slice(0, 10);
+      parsed.claimedMilestones = Array.isArray(parsed.claimedMilestones) ? parsed.claimedMilestones : ['ms-0'];
+      parsed.unlockedItems = Array.isArray(parsed.unlockedItems) ? parsed.unlockedItems : ['theme-midnight'];
+      parsed.defeatedBosses = Array.isArray(parsed.defeatedBosses) ? parsed.defeatedBosses : [];
+      parsed.achievements = Array.isArray(parsed.achievements) ? parsed.achievements : [];
       if (!parsed.dailyQuests || parsed.dailyQuests.date !== today) {
         parsed.dailyQuests = {
           date: today,
@@ -2109,6 +2113,32 @@ class MatteApp {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.MatteApp = MatteApp;
+}
+if (typeof global !== 'undefined') {
+  global.MatteApp = MatteApp;
+}
+
+function bootApp() {
+  if (!window.matteApp) {
+    try {
+      window.matteApp = new MatteApp();
+      window.matteApp.init();
+    } catch (e) {
+      console.error('Kunde inte starta MatteApp:', e);
+    }
+  }
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootApp);
+  } else {
+    bootApp();
   }
 }
 

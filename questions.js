@@ -987,3 +987,18 @@ function checkUserAnswer(userRaw, questionObj) {
   }
   return false;
 }
+
+if (typeof window !== 'undefined') {
+  window.CATEGORIES = CATEGORIES;
+  window.STATIC_QUESTIONS = STATIC_QUESTIONS;
+  window.generateDynamicQuestion = generateDynamicQuestion;
+  window.createSeededRandom = createSeededRandom;
+  window.checkUserAnswer = checkUserAnswer;
+}
+if (typeof global !== 'undefined') {
+  global.CATEGORIES = CATEGORIES;
+  global.STATIC_QUESTIONS = STATIC_QUESTIONS;
+  global.generateDynamicQuestion = generateDynamicQuestion;
+  global.createSeededRandom = createSeededRandom;
+  global.checkUserAnswer = checkUserAnswer;
+}
