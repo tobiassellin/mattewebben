@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NP-Mästaren Åk 9 – Matteträning inför Nationella Provet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-theme="midnight">
+  <div id="confetti-container" aria-hidden="true"></div>
+
+  <!-- TOPPNAVIGATION -->
+  <header class="top-header">
+    <div class="brand-area">
+      <div class="brand-logo">📐</div>
+      <div>
+        <h1 class="brand-title">NP-Mästaren <span class="brand-tag">Åk 9</span></h1>
+        <p class="brand-sub">Nationella provet i matte</p>
+      </div>
+    </div>
+
+    <nav class="main-nav" aria-label="Huvudmeny">
+      <button type="button" class="nav-btn active" data-nav-view="dashboard">🏠 Start</button>
+      <button type="button" class="nav-btn" data-nav-view="arena">✍️ Räkna</button>
+      <button type="button" class="nav-btn" data-nav-view="modes">⚔️ Tävla & Bossar</button>
+      <button type="button" class="nav-btn" data-nav-view="rewards">🏆 Shop & Troféer</button>
+    </nav>
+
+    <div class="player-status-bar">
+      <button type="button" class="btn-formula-quick" id="btn-open-formulas" title="Öppna NP-Formelblad">
+        📖 Formelblad
+      </button>
+
+      <button type="button" class="btn-formula-quick" id="btn-open-save" title="Se hur dina poäng sparas eller flytta till annan dator">
+        💾 Spara / Kod
+      </button>
+
+      <div class="status-pills">
+        <div class="stat-pill streak-pill" title="Rätt i rad">
+          🔥 <span id="header-streak">0</span>
+        </div>
+        <div class="stat-pill shield-pill" title="Streak-sköldar">
+          🛡️ <span id="header-shields">1</span>
+        </div>
+        <div class="stat-pill star-pill" id="btn-quick-shop-pill" title="Klicka för att handla i Poäng-Shopen!" style="cursor:pointer;">
+          ⭐ <span id="header-stars">25</span> 🛒
+        </div>
+      </div>
+
+      <div class="player-profile-chip">
+        <span class="profile-avatar" id="header-avatar">🎓</span>
+        <div class="profile-info">
+          <div class="profile-name-row">
+            <span id="header-player-name">Åk 9-Elev</span>
+            <button type="button" class="edit-name-btn" id="btn-edit-name" title="Byt namn">✏️</button>
+          </div>
+          <span class="profile-rank" id="header-rank-title">Lvl 1 • Nybörjare 🌱</span>
+          <div class="xp-bar-mini">
+            <div class="xp-bar-fill" id="header-xp-fill" style="width: 0%"></div>
+          </div>
+        </div>
+        <span class="xp-badge" id="header-xp-text">0 XP</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- ================================================================== -->
+    <!-- VY 1: START / DASHBOARD                                            -->
+    <!-- ================================================================== -->
+    <section id="view-dashboard" class="app-view active">
+      <div class="hero-banner">
+        <div class="hero-content">
+          <span class="hero-eyebrow">🎯 NP Matematik Åk 9</span>
+          <h2>Snabb & enkel träning inför NP!</h2>
+          <p>
+            Korta uppgifter utan långa texter. Räkna på <strong>vitt papper</strong>, <strong>ringa in ditt svar</strong> så fylls det i automatiskt, eller räkna med tangentbordet!
+          </p>
+          <div class="hero-cta-group">
+            <button type="button" class="btn-primary btn-lg" data-nav-view="arena">
+              🚀 Börja räkna nu
+            </button>
+            <button type="button" class="btn-secondary btn-lg" data-nav-view="modes">
+              ⚔️ Boss-kamp & Tidsjakt
+            </button>
+          </div>
+        </div>
+
+        <div class="np-points-summary">
+          <h3>Dina NP-poäng <span class="autosave-pill">✅ Autosparas</span></h3>
+          <div class="np-points-grid">
+            <div class="np-point-box e-box">
+              <span class="np-lvl">E-poäng</span>
+              <strong id="stat-points-e">0</strong>
+            </div>
+            <div class="np-point-box c-box">
+              <span class="np-lvl">C-poäng</span>
+              <strong id="stat-points-c">0</strong>
+            </div>
+            <div class="np-point-box a-box">
+              <span class="np-lvl">A-poäng</span>
+              <strong id="stat-points-a">0</strong>
+            </div>
+          </div>
+          <p class="np-total-solved">Klara uppgifter: <strong id="stat-total-solved">0</strong></p>
+        </div>
+      </div>
+
+      <!-- UTVECKLINGSLINJE ATT KÄMPA EMOT (NP-RESAN MOT RIVALEN) -->
+      <div id="journey-track-dashboard" class="journey-track-card"></div>
+
+      <div class="section-heading">
+        <h2>📚 Välj område</h2>
+      </div>
+      <div id="category-cards-grid" class="category-grid"></div>
+
+      <div class="dashboard-bottom-grid">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3>🎯 Dagens mål</h3>
+          </div>
+          <div id="daily-quests-list" class="quests-list"></div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3>🏆 Topplista</h3>
+          </div>
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Elev</th>
+                <th>XP</th>
+                <th>Streak</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VY 2: RÄKNA (SNABBLÄST UPPGIFT + VITT PAPPER & TANGENTBORD)        -->
+    <!-- ================================================================== -->
+    <section id="view-arena" class="app-view">
+      <div id="arena-practice-filters" class="arena-filter-bar">
+        <div class="filter-group">
+          <label for="filter-category">Område:</label>
+          <select id="filter-category">
+            <option value="all">Alla områden</option>
+            <option value="tal">🔢 Tal & Procent</option>
+            <option value="algebra">✖️ Algebra & x</option>
+            <option value="funktioner">📈 Grafer & y = kx+m</option>
+            <option value="geometri">📐 Geometri</option>
+            <option value="statistik">🎲 Slump & Statistik</option>
+            <option value="problemlosning">🧠 NP-Kluringar</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-part">Delprov:</label>
+          <select id="filter-part">
+            <option value="all">Alla (B, C, D)</option>
+            <option value="B">Delprov B (Utan räknare)</option>
+            <option value="C">Delprov C (Utan räknare)</option>
+            <option value="D">Delprov D (Med räknare)</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-level">Nivå:</label>
+          <select id="filter-level">
+            <option value="all">Alla (E, C, A)</option>
+            <option value="E">E-nivå</option>
+            <option value="C">C-nivå</option>
+            <option value="A">A-nivå</option>
+          </select>
+        </div>
+
+        <div id="calc-lock-status" class="part-tool-badge locked">
+          🚫 Delprov B: UTAN miniräknare
+        </div>
+      </div>
+
+      <div id="arena-special-status" class="hidden"></div>
+
+      <!-- KOMPAKT UTVECKLINGSLINJE MOT RIVALEN + SNABBA POWER-UPS DIREKT I RÄKNA-VYN -->
+      <div id="journey-track-arena" class="journey-track-card compact-track"></div>
+      <div id="arena-powerups-strip" class="arena-powerups-strip"></div>
+
+      <div class="arena-split-layout">
+        <!-- VÄNSTER / TOPP I HELSKÄRM: FRÅGA & SVAR -->
+        <div class="question-column">
+          <div class="question-card">
+            <div class="question-meta-row">
+              <span id="q-category-badge" class="meta-badge">🔢 Tal</span>
+              <span id="q-part-badge" class="meta-badge part-badge">Delprov B</span>
+              <span id="q-level-badge" class="level-badge level-e">E-nivå</span>
+              <span id="pet-companion-badge" class="pet-companion-badge hidden" title="Ditt aktiva Matte-Husdjur"></span>
+              <button type="button" class="btn-speak" id="btn-speak-question" title="Läs upp uppgiften högt">
+                🔊 Lyssna
+              </button>
+              <button type="button" class="btn-exit-fs hidden" id="btn-exit-pen-fullscreen">
+                ↙ Lämna helskärm
+              </button>
+            </div>
+
+            <h2 id="q-title" class="question-title">Laddar...</h2>
+
+            <div id="q-facts-row" class="facts-chips-row"></div>
+            <div id="q-math-display" class="math-display-box"></div>
+            <div id="q-svg-container" class="question-svg-wrap hidden"></div>
+            <p id="q-text" class="question-body"></p>
+
+            <div class="lifeline-row">
+              <button type="button" class="btn-lifeline primary-lifeline" id="btn-show-hint">
+                👣 Vad är nästa steg? (0/2)
+              </button>
+              <button type="button" class="btn-lifeline" id="btn-show-choices">
+                🎯 4 alternativ
+              </button>
+              <button type="button" class="btn-lifeline" id="btn-reveal-answer" title="Visar hela lösningen och svaret (ger 0 poäng på denna uppgift)">
+                🔑 Visa svaret (0 p)
+              </button>
+            </div>
+
+            <div id="hints-container" class="hints-list"></div>
+            <div id="mc-choices-container" class="mc-choices-grid hidden"></div>
+
+            <!-- Svarsruta -->
+            <div class="answer-submit-box">
+              <div class="answer-input-row">
+                <div class="answer-field-wrap">
+                  <input
+                    type="text"
+                    id="answer-input"
+                    placeholder="Skriv svar (eller ringa in på pappret)..."
+                    autocomplete="off"
+                    aria-label="Ditt svar"
+                  />
+                  <span id="answer-unit-label" class="answer-unit hidden">cm</span>
+                </div>
+                <button type="button" class="btn-primary" id="btn-submit-answer">
+                  Rätta ✓
+                </button>
+                <button type="button" class="btn-accent hidden" id="btn-next-question">
+                  Nästa →
+                </button>
+              </div>
+              <div id="work-bonus-indicator" class="work-bonus-banner">
+                ✍️ Visa uträkning = +25 XP bonus • ⭕ Ringa in ditt svar på pappret!
+              </div>
+            </div>
+
+            <div id="feedback-panel" class="feedback-box hidden"></div>
+          </div>
+        </div>
+
+        <!-- HÖGER / BOTTEN I HELSKÄRM: DUBBEL ARBETSYTA -->
+        <div class="workspace-column">
+          <div class="workspace-card">
+            <div class="workspace-header">
+              <div class="ws-mode-tabs" role="tablist">
+                <button type="button" class="ws-tab" data-ws-mode="draw" title="Öppnar vitt papper i helskärm med frågan">
+                  ✍️ Penna (Helskärm)
+                </button>
+                <button type="button" class="ws-tab" data-ws-mode="keyboard">
+                  ⌨️ Tangentbord
+                </button>
+                <button type="button" class="ws-tab active" data-ws-mode="split">
+                  ⚡ Delad vy
+                </button>
+              </div>
+
+              <div class="ws-header-right">
+                <button type="button" class="btn-calc-toggle" id="btn-toggle-pen-fullscreen" title="Växla helskärmsläge för ritytan">
+                  ⛶ Helskärm
+                </button>
+
+                <div class="calc-dropdown-wrap">
+                  <button type="button" class="btn-calc-toggle" id="btn-toggle-calc">
+                    🖩 Miniräknare
+                  </button>
+                  <div id="calculator-popover" class="calculator-popover hidden">
+                    <div class="calc-top">
+                      <span>Miniräknare (Delprov D)</span>
+                    </div>
+                    <input type="text" id="calc-display" value="0" readonly aria-label="Miniräknardisplay" />
+                    <div id="calc-keys-container" class="calc-keys-grid">
+                      <button type="button" data-calc-key="C" class="calc-key-warn">C</button>
+                      <button type="button" data-calc-key="(" class="calc-key-op">(</button>
+                      <button type="button" data-calc-key=")" class="calc-key-op">)</button>
+                      <button type="button" data-calc-key="/" class="calc-key-op">÷</button>
+
+                      <button type="button" data-calc-key="7">7</button>
+                      <button type="button" data-calc-key="8">8</button>
+                      <button type="button" data-calc-key="9">9</button>
+                      <button type="button" data-calc-key="*" class="calc-key-op">·</button>
+
+                      <button type="button" data-calc-key="4">4</button>
+                      <button type="button" data-calc-key="5">5</button>
+                      <button type="button" data-calc-key="6">6</button>
+                      <button type="button" data-calc-key="-" class="calc-key-op">−</button>
+
+                      <button type="button" data-calc-key="1">1</button>
+                      <button type="button" data-calc-key="2">2</button>
+                      <button type="button" data-calc-key="3">3</button>
+                      <button type="button" data-calc-key="+" class="calc-key-op">+</button>
+
+                      <button type="button" data-calc-key="0">0</button>
+                      <button type="button" data-calc-key=".">,</button>
+                      <button type="button" data-calc-key="sqrt" class="calc-key-op">√</button>
+                      <button type="button" data-calc-key="=" class="calc-key-eq">=</button>
+                    </div>
+                    <button type="button" class="btn-accent btn-sm full-w" id="btn-calc-to-step">
+                      ➡️ Skicka resultat till Svar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="workspace-panels" class="workspace-panels" data-mode="split">
+              <!-- PANEL A: VITT RUTAT PAPPER -->
+              <div class="ws-panel ws-draw-panel">
+                <div class="draw-toolbar">
+                  <div class="tool-group">
+                    <button type="button" class="tool-btn active" data-draw-tool="pen">✏️ Penna</button>
+                    <button type="button" class="tool-btn circle-ans-tool" data-draw-tool="circle-answer" title="Ringa in ditt handskrivna svar så fylls det i automatiskt!">⭕ Ringa in svar</button>
+                    <button type="button" class="tool-btn" data-draw-tool="line">📏 Linje</button>
+                    <button type="button" class="tool-btn" data-draw-tool="eraser">🧽 Sudd</button>
+                  </div>
+
+                  <div class="color-group" aria-label="Pennfärger för vitt papper">
+                    <button type="button" class="color-dot active" data-draw-color="#0f172a" style="background:#0f172a" title="Svart/Mörkblå"></button>
+                    <button type="button" class="color-dot" data-draw-color="#2563eb" style="background:#2563eb" title="Blå"></button>
+                    <button type="button" class="color-dot" data-draw-color="#e11d48" style="background:#e11d48" title="Röd"></button>
+                    <button type="button" class="color-dot" data-draw-color="#059669" style="background:#059669" title="Grön"></button>
+                  </div>
+
+                  <div class="pen-fx-group" aria-label="Magiska pennor">
+                    <button type="button" class="tool-btn active" data-pen-fx="normal" title="Vanlig penna">✒️ Normal</button>
+                    <button type="button" class="tool-btn fx-btn" data-pen-fx="rainbow" id="btn-fx-rainbow" title="Regnbågspenna">🌈 Regnbåge</button>
+                    <button type="button" class="tool-btn fx-btn" data-pen-fx="neon" id="btn-fx-neon" title="Neonpenna">✨ Neon</button>
+                    <button type="button" class="tool-btn fx-btn" data-pen-fx="fire" id="btn-fx-fire" title="Eldpenna">🔥 Eld</button>
+                  </div>
+
+                  <div class="action-group">
+                    <button type="button" class="tool-btn" id="btn-toggle-grid">⊞ Rutat papper</button>
+                    <button type="button" class="tool-btn" id="btn-stamp-axes">➕ Axel</button>
+                    <button type="button" class="tool-btn" id="btn-draw-undo">↩️ Ångra</button>
+                    <button type="button" class="tool-btn danger" id="btn-draw-clear">🗑️ Rensa</button>
+                  </div>
+                </div>
+
+                <div class="canvas-container">
+                  <canvas id="draw-canvas"></canvas>
+                </div>
+              </div>
+
+              <!-- PANEL B: TANGENTBORDS-UTRÄKNING -->
+              <div class="ws-panel ws-keyboard-panel">
+                <div class="keyboard-toolbar">
+                  <div class="sym-buttons">
+                    <button type="button" class="sym-btn" data-insert-sym="x">x</button>
+                    <button type="button" class="sym-btn" data-insert-sym="²">x²</button>
+                    <button type="button" class="sym-btn" data-insert-sym="³">x³</button>
+                    <button type="button" class="sym-btn" data-insert-sym="√(">√</button>
+                    <button type="button" class="sym-btn" data-insert-sym="/">a/b</button>
+                    <button type="button" class="sym-btn" data-insert-sym=" · ">·</button>
+                    <button type="button" class="sym-btn" data-insert-sym=" = ">=</button>
+                    <button type="button" class="sym-btn" data-insert-sym=" ⇒ ">⇒</button>
+                    <button type="button" class="sym-btn" data-insert-sym="π">π</button>
+                    <button type="button" class="sym-btn" data-insert-sym="%">%</button>
+                  </div>
+                </div>
+
+                <div id="keyboard-steps-list" class="keyboard-steps-list"></div>
+
+                <div class="keyboard-footer-actions">
+                  <button type="button" class="btn-secondary btn-sm" id="btn-add-step">
+                    ➕ Ny rad (Enter)
+                  </button>
+                  <button type="button" class="btn-accent btn-sm" id="btn-copy-last-step">
+                    ➡️ Skicka sista raden till Svar
+                  </button>
+                  <button type="button" class="btn-secondary btn-sm danger" id="btn-clear-steps">
+                    🗑️ Rensa
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VY 3: TÄVLA & BOSSAR                                               -->
+    <!-- ================================================================== -->
+    <section id="view-modes" class="app-view">
+      <div class="section-heading">
+        <h2>⚔️ Matte-Bossar</h2>
+        <span>Rätt svar gör skada på bossen!</span>
+      </div>
+      <div id="boss-cards-grid" class="boss-grid"></div>
+
+      <div class="section-heading" style="margin-top: 2rem;">
+        <h2>🏁 Tävlingslägen</h2>
+      </div>
+
+      <div class="modes-three-grid">
+        <div class="mode-feature-card">
+          <div class="mode-icon">⏱️</div>
+          <h3>60s Delprov B-Sprint</h3>
+          <p>Snabba uppgifter utan räknare. +2 sekunder per rätt svar!</p>
+          <button type="button" class="btn-primary full-w" id="btn-start-sprint">
+            Starta 60s Sprint ⚡
+          </button>
+        </div>
+
+        <div class="mode-feature-card">
+          <div class="mode-icon">🤝</div>
+          <h3>Kompisduellen</h3>
+          <p>Samma kod = exakt samma 5 uppgifter för dig och din kompis!</p>
+          <div class="duel-code-row">
+            <input type="text" id="duel-code-input" placeholder="NP-2026" value="NP-2026" />
+            <button type="button" class="btn-secondary btn-sm" id="btn-generate-duel-code">🎲 Ny kod</button>
+          </div>
+          <div class="duel-btn-stack">
+            <button type="button" class="btn-primary full-w" id="btn-start-code-duel">
+              Starta med kod 🚀
+            </button>
+            <button type="button" class="btn-secondary full-w" id="btn-start-2p-duel">
+              🎮 2 Spelare på samma skärm
+            </button>
+          </div>
+        </div>
+
+        <div class="mode-feature-card">
+          <div class="mode-icon">📝</div>
+          <h3>NP-Simulator (6 uppgifter)</h3>
+          <p>2 st Delprov B + 2 st Delprov C + 2 st Delprov D. Få provbetyg (E–A)!</p>
+          <button type="button" class="btn-accent full-w" id="btn-start-exam">
+            Starta NP-Simulatorn 🎓
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VY 4: SHOP & TROFÉER                                               -->
+    <!-- ================================================================== -->
+    <section id="view-rewards" class="app-view">
+      <div class="shop-wallet-banner" id="shop-wallet-bar"></div>
+
+      <div class="section-heading">
+        <h2>🛒 Poäng-Shop: Magiska Pennor, Husdjur, Power-ups & Teman</h2>
+      </div>
+      <div id="shop-items-grid" class="shop-grid"></div>
+
+      <div class="section-heading" style="margin-top: 2rem;">
+        <h2>🏅 Medaljskåp</h2>
+      </div>
+      <div id="achievements-grid" class="achievements-grid"></div>
+    </section>
+  </main>
+
+  <!-- MODAL: FORMELBLAD -->
+  <div id="formula-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="formula-modal-title">
+    <div class="modal-content formula-modal-box">
+      <div class="modal-header">
+        <h2 id="formula-modal-title">📖 Formelblad Åk 9</h2>
+        <button type="button" class="modal-close-btn" id="btn-close-formulas">✕</button>
+      </div>
+      <div class="formula-grid">
+        <div class="formula-section">
+          <h3>📐 Area & Omkrets</h3>
+          <ul>
+            <li><strong>Triangel:</strong> <code>Area = (b · h) / 2</code></li>
+            <li><strong>Cirkel omkrets:</strong> <code>π · d</code></li>
+            <li><strong>Cirkel area:</strong> <code>π · r²</code></li>
+            <li><strong>Pythagoras sats:</strong> <code>a² + b² = c²</code></li>
+          </ul>
+        </div>
+
+        <div class="formula-section">
+          <h3>🧊 Volym & Skala</h3>
+          <ul>
+            <li><strong>Cylinder:</strong> <code>V = π · r² · h</code></li>
+            <li><strong>Prisma / Rätblock:</strong> <code>V = B · h</code></li>
+            <li><strong>Kon / Pyramid:</strong> <code>V = (B · h) / 3</code></li>
+            <li><strong>Areaskala:</strong> <code>(Längdskalan)²</code></li>
+          </ul>
+        </div>
+
+        <div class="formula-section">
+          <h3>📈 Linjer & Hastighet</h3>
+          <ul>
+            <li><strong>Räta linjen:</strong> <code>y = kx + m</code></li>
+            <li><strong>Lutning k:</strong> <code>(y₂ − y₁) / (x₂ − x₁)</code></li>
+            <li><strong>Hastighet:</strong> <code>s = v · t</code> &nbsp;|&nbsp; <code>v = s / t</code></li>
+          </ul>
+        </div>
+
+        <div class="formula-section">
+          <h3>🔢 Potenser & Statistik</h3>
+          <ul>
+            <li><strong>Gånger:</strong> <code>aᵐ · aⁿ = aᵐ⁺ⁿ</code></li>
+            <li><strong>Delat:</strong> <code>aᵐ / aⁿ = aᵐ⁻ⁿ</code></li>
+            <li><strong>Medelvärde:</strong> <code>Summan / Antalet</code></li>
+            <li><strong>Median:</strong> Talet i mitten (sorterat)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SPARA / FLYTTA FRAMSTEG MED SÄKERHETSKOD -->
+  <div id="save-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="save-modal-title">
+    <div class="modal-content summary-modal-box" style="max-width: 540px; text-align: left;">
+      <div class="modal-header">
+        <h2 id="save-modal-title">💾 Hur sparas dina poäng?</h2>
+        <button type="button" class="modal-close-btn" id="btn-close-save">✕</button>
+      </div>
+      <div class="save-info-box">
+        <p style="margin-bottom: 0.75rem;">
+          ✅ <strong>Automatisk sparning på denna enhet:</strong> Dina XP, poäng, streaks och teman sparas automatiskt i webbläsaren direkt efter varje uppgift.
+        </p>
+        <p style="margin-bottom: 0.9rem; color: var(--text-muted); font-size: 0.9rem;">
+          🔑 <strong>Byta dator eller spara backup?</strong> Kopiera din personliga <strong>Sparkod</strong> nedan så kan du klistra in den på vilken annan dator eller mobil som helst!
+        </p>
+
+        <label for="save-code-output" style="font-weight: 800; font-size: 0.85rem;">Din personliga Sparkod:</label>
+        <div class="duel-code-row" style="margin: 0.4rem 0 1rem;">
+          <input type="text" id="save-code-output" readonly style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;" />
+          <button type="button" class="btn-primary btn-sm" id="btn-copy-save-code">📋 Kopiera kod</button>
+        </div>
+
+        <label for="save-code-input" style="font-weight: 800; font-size: 0.85rem;">Ladda framsteg från en Sparkod:</label>
+        <div class="duel-code-row" style="margin-top: 0.4rem;">
+          <input type="text" id="save-code-input" placeholder="Klistra in din Sparkod här..." style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;" />
+          <button type="button" class="btn-accent btn-sm" id="btn-load-save-code">🔄 Ladda in</button>
+        </div>
+        <p id="save-modal-status" style="margin-top: 0.6rem; font-weight: 800; font-size: 0.86rem; color: var(--accent);"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RESULTAT -->
+  <div id="summary-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-content summary-modal-box">
+      <h2 id="summary-modal-title">Resultat</h2>
+      <div id="summary-modal-body" class="summary-modal-body"></div>
+      <button type="button" class="btn-primary btn-lg full-w" id="btn-close-summary">
+        Fortsätt 🚀
+      </button>
+    </div>
+  </div>
+
+  <script src="questions.js"></script>
+  <script src="workspace.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
