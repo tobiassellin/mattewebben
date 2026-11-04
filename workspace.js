@@ -803,6 +803,41 @@ class CalculationWorkspace {
     }
   }
 
+  showAnsweredBannerOnCanvas(isCorrect, rightAnsText = '') {
+    const container = this.canvas?.parentElement;
+    if (!container) return;
+
+    let banner = document.getElementById('circled-answer-banner');
+    const wasVisible = banner && !banner.classList.contains('hidden');
+    if (!this.isPenFullscreen && !wasVisible) return;
+
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'circled-answer-banner';
+      banner.className = 'circled-answer-banner';
+      container.appendChild(banner);
+    }
+
+    banner.classList.remove('hidden');
+    const statusLabel = isCorrect
+      ? '🎉 Rätt svar!'
+      : `💡 Rätt svar: ${this.escapeAttr(rightAnsText)}`;
+
+    banner.innerHTML = `
+      <span class="circled-tag">${statusLabel}</span>
+      <button type="button" class="btn-accent btn-sm" id="btn-canvas-next-question">
+        Nästa uppgift →
+      </button>
+    `;
+
+    const nextBtn = banner.querySelector('#btn-canvas-next-question');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        window.matteApp?.handleNextStepAfterAnswer();
+      });
+    }
+  }
+
   hideCircledBanner() {
     const banner = document.getElementById('circled-answer-banner');
     if (banner) banner.classList.add('hidden');

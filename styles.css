@@ -840,25 +840,189 @@ body {
 .mc-choices-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.55rem;
-  margin-bottom: 0.9rem;
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
 }
 
 .mc-choice-btn {
+  position: relative;
   background: var(--bg-card-alt);
   color: var(--text-main);
   border: 2px solid var(--border-color);
-  padding: 0.68rem;
-  border-radius: 10px;
+  padding: 0.75rem 0.95rem;
+  border-radius: 12px;
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 1.05rem;
   cursor: pointer;
   font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.mc-choice-btn:hover {
+.mc-choice-btn:hover:not(:disabled) {
   border-color: var(--primary);
   background: rgba(99, 102, 241, 0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+.mc-choice-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--bg-input);
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.mc-choice-val {
+  flex: 1;
+  text-align: left;
+  word-break: break-word;
+}
+
+.mc-choice-badge {
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  empty-cells: hide;
+}
+
+.mc-choice-badge.badge-correct {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+}
+
+.mc-choice-badge.badge-wrong {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+}
+
+/* Rätt svar valt */
+.mc-choice-btn.choice-correct {
+  background: rgba(16, 185, 129, 0.22) !important;
+  border-color: #10b981 !important;
+  color: #34d399 !important;
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.45) !important;
+  animation: choicePop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.mc-choice-btn.choice-correct .mc-choice-letter {
+  background: #10b981;
+  color: #ffffff;
+}
+
+/* Fel svar valt */
+.mc-choice-btn.choice-wrong {
+  background: rgba(239, 68, 68, 0.22) !important;
+  border-color: #ef4444 !important;
+  color: #f87171 !important;
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.45) !important;
+  animation: choiceShake 0.4s ease;
+}
+
+.mc-choice-btn.choice-wrong .mc-choice-letter {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+/* Visar vilket som var det rätta alternativet vid felgissning */
+.mc-choice-btn.choice-reveal-correct {
+  background: rgba(16, 185, 129, 0.16) !important;
+  border-color: #34d399 !important;
+  border-style: dashed !important;
+  color: #34d399 !important;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.32) !important;
+}
+
+.mc-choice-btn.choice-reveal-correct .mc-choice-letter {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.mc-choice-btn.choice-dimmed {
+  opacity: 0.35 !important;
+  filter: grayscale(50%);
+  cursor: default !important;
+  pointer-events: none;
+}
+
+@keyframes choicePop {
+  0% { transform: scale(0.95); }
+  50% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+@keyframes choiceShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+/* Direkt feedback-banner precis under alternativen */
+.mc-instant-banner {
+  margin: 0.4rem 0 0.85rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  animation: fadeIn 0.25s ease;
+}
+
+.mc-instant-banner.is-correct {
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #34d399;
+}
+
+.mc-instant-banner.is-wrong {
+  background: rgba(239, 68, 68, 0.16);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #f87171;
+}
+
+.mc-instant-text {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.mc-instant-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.mc-instant-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.mc-instant-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+#answer-input.input-wrong-flash {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
 }
 
 .answer-submit-box {
@@ -1242,6 +1406,25 @@ body.pen-fullscreen-mode .question-card {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+}
+
+body.pen-fullscreen-mode .answer-submit-box {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-card);
+  z-index: 15;
+  padding-top: 0.55rem;
+  padding-bottom: 0.3rem;
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -6px 16px rgba(15, 23, 42, 0.35);
+}
+
+.np-source-badge {
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  font-weight: 800;
 }
 
 body.pen-fullscreen-mode .workspace-card {

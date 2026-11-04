@@ -931,24 +931,44 @@ class MatteApp {
   // --------------------------------------------------------------------------
   // HÄMTA OCH VISA UPPGIFT
   // --------------------------------------------------------------------------
-  pickPracticeQuestion() {
-    let pool = STATIC_QUESTIONS.filter(q => {
-      if (this.selectedCategory !== 'all' && q.category !== this.selectedCategory) return false;
-      if (this.selectedPart !== 'all' && q.part !== this.selectedPart) return false;
-      if (this.selectedLevel !== 'all' && q.level !== this.selectedLevel) return false;
+  syncFiltersFromDOM() {
+    const catSelect = document.getElementById('filter-category');
+    const partSelect = document.getElementById('filter-part');
+    const levelSelect = document.getElementById('filter-level');
+    if (catSelect && catSelect.value) this.selectedCategory = catSelect.value;
+    if (partSelect && partSelect.value) this.selectedPart = partSelect.value;
+    if (levelSelect && levelSelect.value) this.selectedLevel = levelSelect.value;
+  }
+
+  pickQuestionForFilter(catFilter, partFilter, levelFilter) {
+    const pool = STATIC_QUESTIONS.filter(q => {
+      if (catFilter !== 'all' && q.category !== catFilter) return false;
+      if (partFilter !== 'all' && q.part !== partFilter) return false;
+      if (levelFilter !== 'all' && q.level !== levelFilter) return false;
       return true;
     });
 
     const unseen = pool.filter(q => !this.seenQuestionIds.has(q.id));
-    if (unseen.length > 0 && Math.random() < 0.7) {
+    if (unseen.length > 0) {
       const chosen = unseen[Math.floor(Math.random() * unseen.length)];
       this.seenQuestionIds.add(chosen.id);
       return chosen;
     }
 
     return generateDynamicQuestion(
+      catFilter,
+      levelFilter === 'all' ? null : levelFilter,
+      Math.random,
+      partFilter === 'all' ? null : partFilter
+    );
+  }
+
+  pickPracticeQuestion() {
+    this.syncFiltersFromDOM();
+    return this.pickQuestionForFilter(
       this.selectedCategory,
-      this.selectedLevel === 'all' ? null : this.selectedLevel
+      this.selectedPart,
+      this.selectedLevel
     );
   }
 
@@ -956,8 +976,7 @@ class MatteApp {
     if (this.currentMode === 'practice') {
       this.currentQuestion = this.pickPracticeQuestion();
     } else if (this.currentMode === 'boss' && this.activeBoss) {
-      this.selectedCategory = this.activeBoss.category;
-      this.currentQuestion = this.pickPracticeQuestion();
+      this.currentQuestion = this.pickQuestionForFilter(this.activeBoss.category, 'all', 'all');
     } else if (this.currentMode === 'sprint') {
       const bPool = STATIC_QUESTIONS.filter(q => q.part === 'B');
       if (Math.random() < 0.5 && bPool.length > 0) {
@@ -1053,6 +1072,7 @@ class MatteApp {
     if (ansInput) {
       ansInput.value = '';
       ansInput.disabled = false;
+      ansInput.classList.remove('input-flash', 'input-wrong-flash');
       if (!this.workspace.isPenFullscreen) {
         ansInput.focus();
       }
@@ -1158,16 +1178,19 @@ class MatteApp {
       panel.innerHTML = `
         <div class="feedback-header">
           <span class="feedback-icon">🔑</span>
-          <div>
+          <div style="flex:1;">
             <h4>Svar: <strong>${this.escapeHtml(rightAns)} ${this.escapeHtml(this.currentQuestion.unit || '')}</strong> (0 poäng – Svaret visades)</h4>
-            <p class="sub-hint">Kika på stegen nedan och klicka sedan på <strong>Nästa →</strong> för att ta poäng på nästa uppgift!</p>
+            <p class="sub-hint">Kika på stegen nedan och klicka sedan på <strong>Nästa uppgift →</strong>!</p>
           </div>
+          <button type="button" class="btn-accent btn-sm" data-inline-next="1">Nästa uppgift →</button>
         </div>
         <div class="solution-box-open">
           <ol class="solution-steps-list">${stepsHtml}</ol>
         </div>
       `;
+      panel.querySelector('[data-inline-next]')?.addEventListener('click', () => this.handleNextStepAfterAnswer());
     }
+    this.workspace.showAnsweredBannerOnCanvas?.(false, `${rightAns} ${this.currentQuestion.unit || ''}`.trim());
 
     requestAnimationFrame(() => this.workspace.resizeCanvas());
   }
@@ -1199,61 +1222,189 @@ class MatteApp {
     container.innerHTML = '';
     container.classList.remove('hidden');
 
-    choices.forEach(c => {
+    const letters = ['A', 'B', 'C', 'D'];
+    const grid = document.createElement('div');
+    grid.className = 'mc-choices-grid';
+
+    choices.forEach((c, idx) => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'mc-choice-btn';
-      btn.textContent =
+      btn.dataset.choiceVal = c;
+
+      const label =
         this.currentQuestion.unit && !c.includes(this.currentQuestion.unit)
           ? `${c} ${this.currentQuestion.unit}`
           : c;
+
+      btn.innerHTML = `
+        <span class="mc-choice-letter">${letters[idx] || '•'}</span>
+        <span class="mc-choice-val">${this.escapeHtml(label)}</span>
+        <span class="mc-choice-badge"></span>
+      `;
+
       btn.addEventListener('click', () => {
-        const ansInput = document.getElementById('answer-input');
-        if (ansInput) {
-          ansInput.value = c;
-          this.handleAnswerSubmit();
-        }
+        this.handleChoiceSelection(c, btn);
       });
-      container.appendChild(btn);
+
+      grid.appendChild(btn);
     });
 
-    document.getElementById('btn-show-choices').disabled = true;
-    requestAnimationFrame(() => this.workspace.resizeCanvas());
+    container.appendChild(grid);
+
+    const mcBtn = document.getElementById('btn-show-choices');
+    if (mcBtn) mcBtn.disabled = true;
+
+    requestAnimationFrame(() => {
+      grid.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      this.workspace.resizeCanvas();
+    });
+  }
+
+  handleChoiceSelection(choiceVal, clickedBtn) {
+    if (this.questionAnswered || !this.currentQuestion) return;
+
+    const ansInput = document.getElementById('answer-input');
+    if (ansInput) {
+      ansInput.value = choiceVal;
+    }
+
+    this.handleAnswerSubmit();
+
+    const container = document.getElementById('mc-choices-container');
+    if (container) {
+      requestAnimationFrame(() => {
+        container.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      });
+    }
   }
 
   generateDistractors(correctStr, unit) {
-    const clean = String(correctStr).replace(unit || '', '').trim();
-    const num = Number(clean.replace(',', '.'));
-    const options = new Set([clean]);
+    const raw = String(correctStr).trim();
+    const clean = raw.replace(unit || '', '').trim();
+    const options = new Set();
+    options.add(clean);
 
-    if (!Number.isNaN(num) && clean !== '') {
-      const offsets = [
-        2,
-        -2,
-        5,
-        -4,
-        10,
-        -10,
-        Math.max(1, Math.round(num * 0.25)),
-        -Math.max(1, Math.round(num * 0.2))
+    // 1. Bråk: t.ex. "11/12", "1/4", "2/15"
+    const fracMatch = clean.match(/^(\d+)\s*\/\s*(\d+)$/);
+    if (fracMatch) {
+      const num = parseInt(fracMatch[1], 10);
+      const den = parseInt(fracMatch[2], 10);
+      const candidates = [
+        `${Math.max(1, num - 1)}/${den}`,
+        `${num + 1}/${den}`,
+        `${Math.max(1, den - num)}/${den}`,
+        `${num}/${den + 2}`,
+        `${num * 2}/${den * 2 + 1}`,
+        `${Math.max(1, num - 2)}/${den}`
       ];
+      for (const cand of candidates) {
+        if (cand !== clean && options.size < 4) options.add(cand);
+      }
+    }
+
+    // 2. Räta linjens ekvation: t.ex. "y=2x+3", "y = 4x + 2"
+    const eqMatch = clean.match(/^y\s*=\s*([+-]?\d*)x\s*([+-]\s*\d+)?$/i);
+    if (eqMatch) {
+      const k = parseInt(eqMatch[1] || '1', 10) || 1;
+      const m = parseInt((eqMatch[2] || '0').replace(/\s+/g, ''), 10);
+      const candidates = [
+        `y = ${k}x ${m >= 0 ? '- ' + Math.abs(m || 2) : '+ ' + Math.abs(m || 2)}`,
+        `y = ${k + 1}x ${m !== 0 ? (m > 0 ? '+ ' + m : '- ' + Math.abs(m)) : ''}`.trim(),
+        `y = ${-k}x ${m !== 0 ? (m > 0 ? '+ ' + m : '- ' + Math.abs(m)) : ''}`.trim(),
+        `y = ${m !== 0 ? m : 2}x ${k > 0 ? '+ ' + k : '- ' + Math.abs(k)}`
+      ];
+      for (const cand of candidates) {
+        if (cand !== clean && options.size < 4) options.add(cand);
+      }
+    }
+
+    // 3. Algebraiskt uttryck: t.ex. "5x-7", "2x+4"
+    const algMatch = clean.match(/^([+-]?\d*)x\s*([+-]\s*\d+)$/i);
+    if (algMatch) {
+      const k = parseInt(algMatch[1] || '1', 10) || 1;
+      const m = parseInt((algMatch[2] || '0').replace(/\s+/g, ''), 10);
+      const candidates = [
+        `${k}x ${m >= 0 ? '- ' + Math.abs(m) : '+ ' + Math.abs(m)}`,
+        `${Math.abs(m)}x ${k >= 0 ? '- ' + k : '+ ' + Math.abs(k)}`,
+        `${k + 2}x ${m > 0 ? '+ ' + m : '- ' + Math.abs(m)}`,
+        `${k}x ${m > 0 ? '+ ' + (m + 3) : '- ' + Math.abs(m - 3)}`
+      ];
+      for (const cand of candidates) {
+        if (cand !== clean && options.size < 4) options.add(cand);
+      }
+    }
+
+    // 4. Grundpotensform: t.ex. "1,2*10^8"
+    const sciMatch = clean.match(/^([\d,.]+)\s*\*\s*10\^(\d+)$/);
+    if (sciMatch) {
+      const base = sciMatch[1];
+      const exp = parseInt(sciMatch[2], 10);
+      const candidates = [
+        `${base}*10^${exp - 1}`,
+        `${base}*10^${exp + 1}`,
+        `${(parseFloat(base.replace(',', '.')) * 10).toString().replace('.', ',')}*10^${exp - 1}`
+      ];
+      for (const cand of candidates) {
+        if (cand !== clean && options.size < 4) options.add(cand);
+      }
+    }
+
+    // 5. Tal & decimaler
+    const numClean = clean.replace(',', '.');
+    const num = Number(numClean);
+    if (!Number.isNaN(num) && clean !== '') {
+      const isInteger = Number.isInteger(num);
+      const offsets = isInteger
+        ? [
+            2,
+            -2,
+            5,
+            -4,
+            1,
+            -1,
+            Math.max(1, Math.round(num * 0.25)),
+            -Math.max(1, Math.round(num * 0.2)),
+            Math.round(num * 2),
+            Math.max(1, Math.round(num / 2))
+          ]
+        : [
+            0.5,
+            -0.5,
+            1.0,
+            -1.0,
+            0.2,
+            -0.2,
+            Math.round(num * 2 * 10) / 10
+          ];
+
       for (const off of offsets) {
         if (options.size >= 4) break;
         const cand = Math.round((num + off) * 100) / 100;
-        if (cand > 0 || num < 0) {
-          options.add(String(cand).replace('.', ','));
+        if (cand > 0 || num <= 0) {
+          const str = String(cand).replace('.', ',');
+          if (str !== clean) {
+            options.add(str);
+          }
         }
       }
-    } else {
-      options.add('2x + 5');
-      options.add('4x - 7');
-      options.add('y = 3x + 2');
-      options.add('3/8');
     }
 
-    return Array.from(options)
-      .slice(0, 4)
-      .sort(() => Math.random() - 0.5);
+    // Fallbacks om inte 4 uppnåtts
+    const fallbacks = ['2', '4', '8', '12', '15', '24', '30', '50', '100'];
+    for (const fb of fallbacks) {
+      if (options.size >= 4) break;
+      if (!options.has(fb) && fb !== clean) {
+        options.add(fb);
+      }
+    }
+
+    const arr = Array.from(options).slice(0, 4);
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
   }
 
   // --------------------------------------------------------------------------
@@ -1277,6 +1428,85 @@ class MatteApp {
     const showedWork = this.workspace.hasShownWork();
     const cat = this.currentQuestion.category;
 
+    if (isCorrect) {
+      ansInput.classList.add('input-flash');
+      ansInput.classList.remove('input-wrong-flash');
+    } else {
+      ansInput.classList.add('input-wrong-flash');
+      ansInput.classList.remove('input-flash');
+    }
+
+    // Uppdatera de 4 alternativen direkt och tydligt om de är öppna!
+    const mcContainer = document.getElementById('mc-choices-container');
+    if (mcContainer && !mcContainer.classList.contains('hidden')) {
+      const allBtns = mcContainer.querySelectorAll('.mc-choice-btn');
+      allBtns.forEach(btn => {
+        btn.disabled = true;
+        const val = btn.dataset.choiceVal;
+        const isThisChoiceCorrect = checkUserAnswer(val, this.currentQuestion);
+        const isThisUserVal = checkUserAnswer(val, { acceptedAnswers: [userVal], unit: this.currentQuestion.unit }) ||
+                              val.trim().toLowerCase() === userVal.trim().toLowerCase();
+        const badge = btn.querySelector('.mc-choice-badge');
+
+        if (isThisUserVal) {
+          if (isCorrect) {
+            btn.classList.add('choice-correct');
+            if (badge) {
+              badge.textContent = '🎉 Rätt val!';
+              badge.className = 'mc-choice-badge badge-correct';
+            }
+          } else {
+            btn.classList.add('choice-wrong');
+            if (badge) {
+              badge.textContent = '❌ Ditt val (Fel)';
+              badge.className = 'mc-choice-badge badge-wrong';
+            }
+          }
+        } else if (!isCorrect && isThisChoiceCorrect) {
+          btn.classList.add('choice-reveal-correct');
+          if (badge) {
+            badge.textContent = '✓ Rätt svar';
+            badge.className = 'mc-choice-badge badge-correct';
+          }
+        } else {
+          btn.classList.add('choice-dimmed');
+        }
+      });
+
+      // Lägg till direkt feedback-banner med "Nästa uppgift"-knapp precis under alternativen
+      const prevBanner = mcContainer.querySelector('.mc-instant-banner');
+      if (prevBanner) prevBanner.remove();
+
+      const correctAns = this.currentQuestion.acceptedAnswers[0];
+      const unit = this.currentQuestion.unit || '';
+      const banner = document.createElement('div');
+      banner.className = `mc-instant-banner ${isCorrect ? 'is-correct' : 'is-wrong'}`;
+      banner.innerHTML = `
+        <div class="mc-instant-text">
+          <span class="mc-instant-icon">${isCorrect ? '🎉' : '💡'}</span>
+          <div>
+            <div class="mc-instant-title">${
+              isCorrect
+                ? '<strong>Snyggt jobbat!</strong> Du valde helt rätt svar!'
+                : `<strong>Inte riktigt!</strong> Rätt svar är: <strong>${this.escapeHtml(correctAns)} ${this.escapeHtml(unit)}</strong>`
+            }</div>
+            <div class="mc-instant-sub">${
+              isCorrect
+                ? 'Poäng och streak har registrerats!'
+                : 'Se hela lösningsgången i rutan nedan.'
+            }</div>
+          </div>
+        </div>
+        <button type="button" class="btn-accent btn-sm mc-instant-next-btn">Nästa uppgift →</button>
+      `;
+
+      const nextBtn = banner.querySelector('.mc-instant-next-btn');
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => this.handleNextStepAfterAnswer());
+      }
+      mcContainer.appendChild(banner);
+    }
+
     if (!this.state.categoryStats[cat]) {
       this.state.categoryStats[cat] = { solved: 0, attempted: 0 };
     }
@@ -1295,6 +1525,7 @@ class MatteApp {
   }
 
   onCorrectAnswer(showedWork, cat) {
+    this.launchConfetti();
     this.state.totalSolved++;
     this.state.categoryStats[cat].solved++;
     this.state.streak++;
@@ -1434,11 +1665,12 @@ class MatteApp {
       .map(s => `<li>${this.escapeHtml(s)}</li>`)
       .join('');
 
+    const rightAns = this.currentQuestion.acceptedAnswers[0];
     if (isCorrect) {
       panel.innerHTML = `
         <div class="feedback-header">
           <span class="feedback-icon">🎉</span>
-          <div>
+          <div style="flex:1;">
             <h4>Rätt svar!</h4>
             <div class="feedback-pills">
               <span class="fb-pill">+${details.totalXp} XP</span>
@@ -1450,6 +1682,7 @@ class MatteApp {
             </div>
             ${details.modeExtraMsg ? `<p class="mode-extra-msg">${details.modeExtraMsg}</p>` : ''}
           </div>
+          <button type="button" class="btn-accent btn-sm" data-inline-next="1">Nästa uppgift →</button>
         </div>
         <details class="solution-details">
           <summary>Visa alla uträkningssteg</summary>
@@ -1457,11 +1690,10 @@ class MatteApp {
         </details>
       `;
     } else {
-      const rightAns = this.currentQuestion.acceptedAnswers[0];
       panel.innerHTML = `
         <div class="feedback-header">
           <span class="feedback-icon">💡</span>
-          <div>
+          <div style="flex:1;">
             <h4>Rätt svar är: <strong>${this.escapeHtml(rightAns)} ${this.escapeHtml(this.currentQuestion.unit || '')}</strong></h4>
             ${
               details.shieldUsed
@@ -1469,12 +1701,15 @@ class MatteApp {
                 : ''
             }
           </div>
+          <button type="button" class="btn-accent btn-sm" data-inline-next="1">Nästa uppgift →</button>
         </div>
         <div class="solution-box-open">
           <ol class="solution-steps-list">${stepsHtml}</ol>
         </div>
       `;
     }
+    panel.querySelector('[data-inline-next]')?.addEventListener('click', () => this.handleNextStepAfterAnswer());
+    this.workspace.showAnsweredBannerOnCanvas?.(isCorrect, `${rightAns} ${this.currentQuestion.unit || ''}`.trim());
   }
 
   handleNextStepAfterAnswer() {
@@ -2103,7 +2338,10 @@ class MatteApp {
       piece.style.animationDuration = `${1.2 + Math.random() * 1.2}s`;
       piece.style.animationDelay = `${Math.random() * 0.25}s`;
       container.appendChild(piece);
-      setTimeout(() => piece.remove(), 2600);
+      setTimeout(() => {
+        if (piece.parentNode) piece.parentNode.removeChild(piece);
+        else if (typeof piece.remove === 'function') piece.remove();
+      }, 2600);
     }
   }
 
@@ -2142,7 +2380,4 @@ if (typeof document !== 'undefined') {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  window.matteApp = new MatteApp();
-  window.matteApp.init();
-});
+
