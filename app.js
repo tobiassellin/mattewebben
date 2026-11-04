@@ -1223,8 +1223,9 @@ class MatteApp {
     container.classList.remove('hidden');
 
     const letters = ['A', 'B', 'C', 'D'];
+    const hasLongChoice = choices.some(c => String(c).length > 8);
     const grid = document.createElement('div');
-    grid.className = 'mc-choices-grid';
+    grid.className = `mc-choices-grid${hasLongChoice ? ' long-choices' : ''}`;
 
     choices.forEach((c, idx) => {
       const btn = document.createElement('button');
@@ -1232,14 +1233,14 @@ class MatteApp {
       btn.className = 'mc-choice-btn';
       btn.dataset.choiceVal = c;
 
-      const label =
-        this.currentQuestion.unit && !c.includes(this.currentQuestion.unit)
-          ? `${c} ${this.currentQuestion.unit}`
-          : c;
+      const unit = this.currentQuestion.unit;
+      const label = unit && !c.includes(unit)
+        ? `${c}\u00A0${unit}`
+        : c;
 
       btn.innerHTML = `
         <span class="mc-choice-letter">${letters[idx] || '•'}</span>
-        <span class="mc-choice-val">${this.escapeHtml(label)}</span>
+        <span class="mc-choice-val" title="${this.escapeHtml(label)}">${this.escapeHtml(label)}</span>
         <span class="mc-choice-badge"></span>
       `;
 
@@ -1448,24 +1449,28 @@ class MatteApp {
                               val.trim().toLowerCase() === userVal.trim().toLowerCase();
         const badge = btn.querySelector('.mc-choice-badge');
 
+        const letterEl = btn.querySelector('.mc-choice-letter');
         if (isThisUserVal) {
           if (isCorrect) {
             btn.classList.add('choice-correct');
+            if (letterEl) letterEl.textContent = '✓';
             if (badge) {
-              badge.textContent = '🎉 Rätt val!';
+              badge.textContent = '✓ Rätt';
               badge.className = 'mc-choice-badge badge-correct';
             }
           } else {
             btn.classList.add('choice-wrong');
+            if (letterEl) letterEl.textContent = '✗';
             if (badge) {
-              badge.textContent = '❌ Ditt val (Fel)';
+              badge.textContent = '✗ Fel';
               badge.className = 'mc-choice-badge badge-wrong';
             }
           }
         } else if (!isCorrect && isThisChoiceCorrect) {
           btn.classList.add('choice-reveal-correct');
+          if (letterEl) letterEl.textContent = '✓';
           if (badge) {
-            badge.textContent = '✓ Rätt svar';
+            badge.textContent = '✓ Rätt';
             badge.className = 'mc-choice-badge badge-correct';
           }
         } else {
